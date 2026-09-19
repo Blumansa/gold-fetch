@@ -1,0 +1,14 @@
+name: fetch-gold
+on: workflow_dispatch
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests
+      - run: python fetch.py 2016 2019
+      - uses: actions/upload-artifact@v4
+        with: {name: gold, path: gold_*.json}
