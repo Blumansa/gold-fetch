@@ -1,0 +1,19 @@
+name: gj-hist
+on: workflow_dispatch
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        year: [2016,2017,2018,2019,2020,2021,2022]
+        half: [1,2]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests pandas pyarrow
+      - run: python m1sym.py GBPJPY ${{ matrix.year }} ${{ matrix.half }}
+      - uses: actions/upload-artifact@v4
+        with: {name: "gjh-${{ matrix.year }}-${{ matrix.half }}", path: m1_GBPJPY_*.parquet}
