@@ -25,11 +25,15 @@ def hour(h):
     g=df.groupby(df.t.dt.floor("min"))
     o=pd.DataFrame({"o":g.m.first(),"h":g.m.max(),"l":g.m.min(),"c":g.m.last(),"n":g.m.count(),"sp":g.sp.mean()})
     return o
-y=int(sys.argv[1])
+y=int(sys.argv[1]); half=int(sys.argv[2])
 hs=[datetime(y,1,1,tzinfo=timezone.utc)+timedelta(hours=i) for i in range(24*366)]
-hs=[h for h in hs if h.year==y and h.weekday()<5 or (h.year==y and h.weekday()==6 and h.hour>=21)]
-with ThreadPoolExecutor(8) as ex: res=list(ex.map(hour,hs))
+hs=[h for h in hs if h.year==y and (h.weekday()<5 or (h.weekday()==6 and h.hour>=21))]
+hs=[h for h in hs if (h.month<=6)==(half==1)]
+with ThreadPoolExecutor(12) as ex: res=list(ex.map(hour,hs))
 err=[r[1] for r in res if isinstance(r,tuple)]
 d=pd.concat([r for r in res if isinstance(r,pd.DataFrame)]).sort_index()
-d.index=d.index.tz_localize("UTC"); d.to_parquet(f"m1_{y}.parquet")
+d.index=pd.DatetimeIndex(d.index)
+if d.index.tz is None: d.index=d.index.tz_localize("UTC")
+else: d.index=d.index.tz_convert("UTC")
+d.to_parquet(f"m1_{y}_{half}.parquet")
 print(y,len(d),"minutes;",len(err),"heures en erreur")
